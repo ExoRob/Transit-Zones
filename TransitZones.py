@@ -815,14 +815,18 @@ if print_probabilities == 1 or print_comparison == 1 or plot_comparison == 1:
     prob_str = 'Set,P,P/P_Earth\n'              # for probability table
     comp_str = 'Set,P_TZ,P_approx,% diff\n'     # for comparison table
 
-    planet_inds = np.linspace(0, 7, 8, dtype='int')     # [0 - 7]
-    pls_list = []           # holds all combinations of planet_inds
-    for i in range(8):      # list of single planets
-        pls_list.append([i])
-    for i in combinations(planet_inds, 2):      # all combinations of 2 planets
-        pls_list.append(i)
-    for i in combinations(planet_inds, 3):      # all combinations of 3 planets
-        pls_list.append(i)
+    if print_probabilities == 0 and print_comparison == 0:
+        pls_list = [tuple(comp_region)]
+
+    else:
+        planet_inds = np.linspace(0, 7, 8, dtype='int')     # [0 - 7]
+        pls_list = []           # holds all combinations of planet_inds
+        for i in range(8):      # list of single planets
+            pls_list.append([i])
+        for i in combinations(planet_inds, 2):      # all combinations of 2 planets
+            pls_list.append(i)
+        for i in combinations(planet_inds, 3):      # all combinations of 3 planets
+            pls_list.append(i)
 
     # parameters for comparison plot
     tag_cols = ['grey', 'mediumseagreen', 'mediumblue']
