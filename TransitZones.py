@@ -16,7 +16,7 @@ plot_subplot = 0        # plots 2 crossover regions - reproduces figure 3 in the
                         # requires find_crossovers=1 to have been run with eq='t'
 print_region_corner_table = 0   # outputs the table of crossover regions corners - reproduces appendix 1
 find_planets = 0                # finds all known planets which fall into transit zones -reproduces appendix 3
-print_probabilities = 1         # outputs table of all transiting probabilities - reproduces appendix 2
+print_probabilities = 0         # outputs table of all transiting probabilities - reproduces appendix 2
 print_comparison = 0            # outputs table comparing sizes of crossover regions - reproduces table 2
 plot_comparison = 0             # plots comparison of a crossover region size - reproduces figure 4 in paper
                                 # - set "comp_region" below to choose which crossover. e.g. 4,5: Jupiter, Saturn
