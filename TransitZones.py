@@ -1,7 +1,7 @@
 """
 This code reproduces the figures and tables in the R. Wells et al. 2017 paper.
 The code is structured into different sections for each separate code block.
-Parameters for the code should be set below. Set to 0 to not run and set to 1 to run the related code block.
+Parameters for the code should be set below. Set to 0 to not run or set to 1 to run the related code block.
 """
 
 # Code parameters - 0/1
@@ -11,11 +11,12 @@ plot_gal = 0            # plots orbits of planets over the galactic plane
 find_crossovers = 0     # finds intersection points between all transit zones
                         # - set "eq" below to run using the transit zone angle, grazing angle or approximation
 plot_intersects = 0     # plots each crossover individually while searching
+                        # this was used for finding the intersection points of the 3-planet crossovers
 plot_subplot = 0        # plots 2 crossover regions - reproduces figure 3 in the paper
-
+                        # requires find_crossovers=1 to have been run with eq='t'
 print_region_corner_table = 0   # outputs the table of crossover regions corners - reproduces appendix 1
 find_planets = 0                # finds all known planets which fall into transit zones -reproduces appendix 3
-print_probabilities = 0         # outputs table of all transiting probabilities - reproduces appendix 2
+print_probabilities = 1         # outputs table of all transiting probabilities - reproduces appendix 2
 print_comparison = 0            # outputs table comparing sizes of crossover regions - reproduces table 2
 plot_comparison = 0             # plots comparison of a crossover region size - reproduces figure 4 in paper
                                 # - set "comp_region" below to choose which crossover. e.g. 4,5: Jupiter, Saturn
@@ -186,7 +187,7 @@ if plot_gal == 1:
 # Make ecliptic K2 fields file
 if plot_k2 == 1:
     # K2 field coordinates (equatorial) from https://keplerscience.arc.nasa.gov/k2-fields.html#machine-readable-files
-    d = np.genfromtxt('k2-footprint.csv', delimiter=',', skip_header=1)
+    d = np.genfromtxt('DataIn/k2-footprint.csv', delimiter=',', skip_header=1)
 
     cs_inds = []    # first coordinate of campaigns for annotating
     for i in range(17):
@@ -881,7 +882,7 @@ if print_probabilities == 1 or print_comparison == 1 or plot_comparison == 1:
                 comp_str += using_names + ',' + '%.2e' % at + ',' + '%.2e' % approx_at + ',' + str(aptz_diff) + '\n'
 
             if print_probabilities == 1:
-                prob_str += using_names + ',' + '%.2e' % at + ',' + '%.2e' % (at / at_earth) + '\n'
+                prob_str += using_names + ',' + '%.1e' % at + ',' + '%.1e' % (at / at_earth) + '\n'
 
         else:       # if 2 or 3 planets
             try:    # print_comparison ValueErrors if not in list
@@ -983,7 +984,7 @@ if print_probabilities == 1 or print_comparison == 1 or plot_comparison == 1:
                                 str(round(diff_tz_a, 1)) + '\n'
 
                 if print_probabilities == 1:
-                    prob_str += using_names + ',' + '%.2e' % at[0] + ',' + '%.2e' % (at[0] / at_earth) + '\n'
+                    prob_str += using_names + ',' + '%.1e' % at[0] + ',' + '%.1e' % (at[0] / at_earth) + '\n'
 
                 # comparison plot
                 if list(comp_region) == list(pls):
