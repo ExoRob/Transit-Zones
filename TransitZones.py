@@ -760,7 +760,7 @@ if find_planets == 1:
                 if lower <= ecliptic_lat <= upper:      # if within transit zone
                     in_regs.append(names[i])
 
-            if len(in_regs) > 0:                        # if in 1 or more transit zones, save info
+            if len(in_regs) > 0 and ra_dec != [0.0, 0.0]:                 # if in 1 or more transit zones, save info
                 name.append(df['# name'][j])
                 status.append(df['planet_status'][j])
                 ecl_lon.append(ecliptic_lon)
@@ -782,7 +782,7 @@ if find_planets == 1:
     n_conf, n_unconf, n_cand = status.count('Confirmed'), status.count('Unconfirmed'), status.count('Candidate')
     print '> > Found:', n_conf, 'confirmed,', n_unconf, 'unconfirmed and', n_cand, 'candidates.'
 
-    string = 'Name,Status,RA/Dec,Zones,Total,Mass,Radius,Period\n'
+    string = 'Name,Status,RA/Dec,Zones,Total,Mass (M_J),Radius (R_J),Period (days)\n'
     for i in range(len(name)):      # construct table
         string += name[i] + ',' + status[i] + ',' + str(format(radec[i][0], '.4f')) + str(format(radec[i][1], '.4f'))\
                   + ',' + ';'.join(regions[i]) + ',' + str(total[i]) + ',' + str(mass[i]) + ',' + str(radius[i]) +\
