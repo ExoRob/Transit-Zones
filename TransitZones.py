@@ -2,6 +2,7 @@
 This code reproduces the figures and tables in the R. Wells et al. 2017 paper.
 The code is structured into different sections for each separate code block.
 Parameters for the code should be set below. Set to 0 to not run or set to 1 to run the related code block.
+Requires Python 2.7 to run.
 """
 
 # Code parameters - 0/1
@@ -48,7 +49,8 @@ import sys
 import matplotlib.image as mpimg
 import pandas
 
-for directory in ['FigOut', 'DataOut']:         # create output directories if not present
+outdirs = ['FigOut', 'DataOut']
+for directory in outdirs:         # create output directories if not present
     if not os.path.exists(directory):
         os.makedirs(directory)
 pandas.set_option('chained_assignment', None)   # turn off pandas copy warning
@@ -211,8 +213,9 @@ if plot_k2 == 1:
             if j % 100 == 0 or j+1 == len(d):
                 print '> >', j, '/', len(d)
 
-        with open('DataIn/K2_fields_ecliptic.pkl', 'wb') as f:      # save to pickle file
-            pickle.dump([lon_l, lat_l], f)
+        for od in outdirs:
+            with open(od+'/K2_fields_ecliptic.pkl', 'wb') as f:      # save to pickle file
+                pickle.dump([lon_l, lat_l], f)
 
     else:       # load pickle file
         with open('DataIn/K2_fields_ecliptic.pkl', 'rb') as f:
@@ -562,13 +565,15 @@ if find_crossovers == 1:
                 sp[-1].append([y3, y4])
 
     all = [region_pls_list, region_lon_list, region_lat_list]   # save to pickle file for table
-    with open('DataIn/all_region_corner_points_'+eq+'.pkl', 'wb') as f:
-        pickle.dump(all, f)
+    for od in outdirs:
+        with open(od+'/all_region_corner_points_'+eq+'.pkl', 'wb') as f:
+            pickle.dump(all, f)
 
     if eq == 't':
         sp.append(x_fit)
-        with open('DataIn/regions_subplot.pkl', 'wb') as f:         # for subplot of regions
-            pickle.dump(sp, f)
+        for od in outdirs:
+            with open(od+'/regions_subplot.pkl', 'wb') as f:         # for subplot of regions
+                pickle.dump(sp, f)
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- -
 """Plots 2 regions in one figure (figure 3 in paper)
