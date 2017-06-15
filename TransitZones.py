@@ -6,23 +6,38 @@ Requires Python 2.7 to run.
 """
 
 # Code parameters - 0/1
-plot_ecl = 0            # plots all transit zones - reproduces figure 2 in the paper
-plot_k2 = 0             # overplots K2 fields - reproduces figure 5 in the paper
+plot_ecl = 1            # plots all transit zones - reproduces figure 2 in the paper
+                        # saves to "FigOut/AllHelioEcliptic.pdf"
+plot_k2 = 1             # overplots K2 fields - reproduces figure 5 in the paper
+                        # saves to "FigOut/AllHelioEcliptic+K2Fields.pdf"
 plot_gal = 0            # plots orbits of planets over the galactic plane
+                        # saves to "FigOut/GalacticOrbits.pdf"
 find_crossovers = 0     # finds intersection points between all transit zones
                         # - set "eq" below to run using the transit zone angle, grazing angle or approximation
-plot_intersects = 0     # plots each crossover individually while searching
+                        # saves pickle files to both DataIn and DataOut directories with names
+                        # "all_region_corner_points_+eq+.pkl" and "regions_subplot.pkl"
+plot_intersects = 0     # plots each crossover individually while searching with plt.show() - no files are saved
                         # this was used for finding the intersection points of the 3-planet crossovers
 plot_subplot = 0        # plots 2 crossover regions - reproduces figure 3 in the paper
-                        # requires find_crossovers=1 to have been run with eq='t'
+                        # requires find_crossovers = 1 to have been run with eq = 't'
+                        # saves to "FigOut/RegionsSubplot.pdf"
 print_region_corner_table = 0   # outputs the table of crossover regions corners - reproduces appendix 1
+                                # saves to "DataOut/RegionCornerTable.csv"
 find_planets = 0                # finds all known planets which fall into transit zones -reproduces appendix 3
+                                # saves to "DataOut/PlanetsInZones.csv"
 print_probabilities = 0         # outputs table of all transiting probabilities - reproduces appendix 2
+                                # saves to "DataOut/ProbabilityTable.csv"
+                                # requires find_crossovers = 1 to have been run three times with eq = 't', 'a' and 'g'
 print_comparison = 0            # outputs table comparing sizes of crossover regions - reproduces table 2
+                                # saves to "DataOut/ComparisonTable.csv"
+                                # requires find_crossovers = 1 to have been run three times with eq = 't', 'a' and 'g'
 plot_comparison = 0             # plots comparison of a crossover region size - reproduces figure 4 in paper
+                                # saves to "FigOut/AreaComparison.pdf"
                                 # - set "comp_region" below to choose which crossover. e.g. 4,5: Jupiter, Saturn
                                 # - set "plot_cs" below to choose which angles to compare. e.g. tz angle to approx
+                                # requires find_crossovers = 1 to have been run three times with eq = 't', 'a' and 'g'
 print_planet_params = 0         # outputs table of TZ & grazing angle, plus transit depths - reproduces table 1
+                                # saves to "DataOut/PlanetParameters.csv"
 
 dens = 400                  # number of data points / degree in fits
 eq = 't'                    # run crossover code for transit zone angle, approximation or grazing angle ('t', 'a', 'g')
@@ -35,6 +50,9 @@ plot_cs = [0, 2]            # which angles to compare - 0:transit zone, 1:approx
 
 if plot_k2 == 1 and plot_ecl == 0:              # plot_k2 requires plot_ecl
     plot_ecl = 1
+
+plot_cs.sort()          # plot comparison in order: t, a, g
+comp_region.sort()      # sort comparison region to match code
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -50,6 +68,7 @@ import matplotlib.image as mpimg
 import pandas
 
 outdirs = ['FigOut', 'DataOut']
+datadirs = ['DataIn', 'DataOut']
 for directory in outdirs:         # create output directories if not present
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -213,7 +232,7 @@ if plot_k2 == 1:
             if j % 100 == 0 or j+1 == len(d):
                 print '> >', j, '/', len(d)
 
-        for od in outdirs:
+        for od in datadirs:
             with open(od+'/K2_fields_ecliptic.pkl', 'wb') as f:      # save to pickle file
                 pickle.dump([lon_l, lat_l], f)
 
@@ -279,8 +298,16 @@ for i in range(len(names)):
         df1 = data_fit + np.asarray(psi_fits[i]) / 2.0      # upper transit zone boundary
         df2 = data_fit - np.asarray(psi_fits[i]) / 2.0      # lower transit zone boundary
 
-        ax.fill_between(x_fit, df1, df2, where=df1 >= df2, edgecolor=c, facecolor=c,    # plot zones as coloured bands
-                        alpha=0.4, interpolate=True, label=names[i])
+        # sample boundaries for smaller filesize of plot
+        x_fit_c, df1_c, df2_c = [], [], []
+        for k in range(0, len(x_fit), dens/25):
+            x_fit_c.append(x_fit[k])
+            df1_c.append(df1[k])
+            df2_c.append(df2[k])
+        x_fit_c, df1_c, df2_c = np.asarray(x_fit_c), np.asarray(df1_c), np.asarray(df2_c)
+
+        ax.fill_between(x_fit_c, df1_c, df2_c, where=df1_c >= df2_c, edgecolor=c,       # plot zones as coloured bands
+                        facecolor=c, alpha=0.4, interpolate=True, label=names[i])
 
 if plot_ecl == 1:
     if plot_k2 == 1:
@@ -292,9 +319,9 @@ if plot_ecl == 1:
             plt.annotate(i, xy=campaign_start, xytext=(campaign_start[0] - 15, campaign_start[1]), fontsize=20,
                          color='r')
 
-        figname = 'FigOut/AllHelioEcliptic+K2Fields.png'
+        figname = 'FigOut/AllHelioEcliptic+K2Fields.pdf'
     else:
-        figname = 'FigOut/AllHelioEcliptic.png'
+        figname = 'FigOut/AllHelioEcliptic.pdf'
 
     ax.set_xlabel('Longitude (Degrees)', fontsize=15)
     ax.set_ylabel('Latitude (Degrees)', fontsize=15)
@@ -305,7 +332,7 @@ if plot_ecl == 1:
     plt.tick_params(axis='both', which='major', length=7)
     plt.tick_params(axis='both', which='minor', length=4)
     ax.legend(loc=1)
-    plt.savefig(figname, format='png', dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.savefig(figname, format='pdf', dpi=300, bbox_inches='tight', pad_inches=0)
     print '> Transit zones plot saved to \"'+figname+'\".'
 
 if plot_gal == 1:
@@ -327,13 +354,14 @@ if plot_gal == 1:
     plt.ylabel('Latitude (degrees)', fontsize=15)
     [i.set_color("darkgrey") for i in plt.gca().get_xticklabels()]
     ax.tick_params(labelsize=15)
-    plt.savefig('FigOut/Galactic_orbits.png', format='png', dpi=200, bbox_inches='tight', pad_inches=0)
-    print '> Galactic plot saved to \"FigOut/Galactic_orbits.png\".'
+    plt.savefig('FigOut/GalacticOrbits.pdf', format='pdf', dpi=200, bbox_inches='tight', pad_inches=0)
+    print '> Galactic plot saved to \"FigOut/GalacticOrbits.pdf\".'
+    plt.clf()
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- -
 """Finds intersection points of the transit zones"""
 
-if find_crossovers == 1:
+if find_crossovers == 1 or plot_intersects == 1:
     if eq == 't':                       # load data for specified angle
         x_ar = np.asarray(psi_fits)
         para = psi_params
@@ -344,7 +372,7 @@ if find_crossovers == 1:
         x_ar = np.asarray(graze_fits)
         para = graze_params
     else:
-        print '>> Bad eq (t, a, g)'
+        print '\n-- Bad eq (t, a, g)'
         sys.exit()
 
     print '> Looking for crossovers between transit zones.'
@@ -385,7 +413,7 @@ if find_crossovers == 1:
         print '> > Looking for intersects between:', using_names
 
         if n != 2 and n != 3:     # no 4+ regions exist
-            print 'n is not a usable number. n =', n
+            print '\n-- n is not a usable number. n =', n
             sys.exit()
 
         # sine function fits to data +/- psi
@@ -565,13 +593,13 @@ if find_crossovers == 1:
                 sp[-1].append([y3, y4])
 
     all = [region_pls_list, region_lon_list, region_lat_list]   # save to pickle file for table
-    for od in outdirs:
+    for od in datadirs:
         with open(od+'/all_region_corner_points_'+eq+'.pkl', 'wb') as f:
             pickle.dump(all, f)
 
     if eq == 't':
         sp.append(x_fit)
-        for od in outdirs:
+        for od in datadirs:
             with open(od+'/regions_subplot.pkl', 'wb') as f:         # for subplot of regions
                 pickle.dump(sp, f)
 
@@ -580,6 +608,10 @@ if find_crossovers == 1:
    Requires 'DataIn/regions_subplot.pkl' file from running find_crossovers=1 with eq='t'"""
 
 if plot_subplot == 1:
+    if not os.path.exists('DataIn/regions_subplot.pkl'):
+        print '\n-- First run with find_crossovers = 1 with eq = t.'
+        sys.exit()
+
     with open('DataIn/regions_subplot.pkl', 'rb') as f:     # load subplot data
         sp = pickle.load(f)
 
@@ -630,8 +662,8 @@ if plot_subplot == 1:
     ax2.tick_params(axis='both', which='both', width=2)
     ax2.tick_params(axis='both', which='major', length=7)
     ax2.tick_params(axis='both', which='minor', length=4)
-    plt.savefig('FigOut/RegionsSubplot.eps', format='eps', dpi=1000, bbox_inches='tight', pad_inches=0)
-    print '> Subplot saved to \"FigOut/RegionsSubplot.eps\".'
+    plt.savefig('FigOut/RegionsSubplot.pdf', format='pdf', dpi=1000, bbox_inches='tight', pad_inches=0)
+    print '> Subplot saved to \"FigOut/RegionsSubplot.pdf\".'
 
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- -
 """Outputs a table of all crossover intersection points using the transit zone angle
@@ -813,9 +845,18 @@ if find_planets == 1:
 # ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- --
 """Computes geometric transit probabilities for all transit zones and crossover regions
    print_probabilities and print_comparison reproduce appendix 2 and table 2 from the paper respectively
-   requires .pkl files made by running find_crossovers=1 with eq='t', 'a' and 'g'"""
+   requires .pkl files made by running find_crossovers=1 three times with eq='t', 'a' and 'g'"""
 
 if print_probabilities == 1 or print_comparison == 1 or plot_comparison == 1:
+    not_made = []
+    for x in ['t', 'a', 'g']:         # test if files are made
+        comp_file = 'DataIn/all_region_corner_points_' + x + '.pkl'
+        if not os.path.exists(comp_file):
+            not_made.append(x)
+    if len(not_made) != 0:
+        print '\n-- First run with find_crossovers = 1 with eq = ' + ', '.join(not_made) + '. Then re-run.'
+        sys.exit()
+
     print '> Computing geometric transit probabilities.'
     x_fit = np.asarray(x_fit)                   # longitude of fits
     prob_str = 'Set,P,P/P_Earth\n'              # for probability table
@@ -991,23 +1032,23 @@ if print_probabilities == 1 or print_comparison == 1 or plot_comparison == 1:
                 if print_probabilities == 1:
                     prob_str += using_names + ',' + '%.1e' % at[0] + ',' + '%.1e' % (at[0] / at_earth) + '\n'
 
-                # comparison plot
-                if list(comp_region) == list(pls):
-                    for h in reversed(plot_cs):
-                        plt.fill_between(x_fit, y_u[h], y_l[h], where=y_u[h] >= y_l[h], color=tag_cols[h],
-                                         alpha=tag_alphas[h], label=tag_labels[h])
-                    plt.xlim(min(x_cut) - 0.2, max(x_cut) + 0.2)
-                    plt.ylim(min(lower) - 0.01, max(upper) + 0.01)
-                    plt.xlabel('Longitude (Degrees)', fontsize=20)
-                    plt.ylabel('Latitude (Degrees)', fontsize=20)
-                    plt.legend(loc='best', fontsize=20)
-                    plt.minorticks_on()
-                    plt.tick_params(axis='both', which='both', width=2)
-                    plt.tick_params(axis='both', which='major', length=7)
-                    plt.tick_params(axis='both', which='minor', length=4)
-                    # plt.show()
-                    plt.savefig('FigOut/AreaComparison.png', format='png', dpi=500)
-                    print '> Comparison plot saved to \"FigOut/AreaComparison.png\".'
+                if plot_comparison == 1:        # comparison plot
+                    if list(comp_region) == list(pls):
+                        for h in reversed(plot_cs):
+                            plt.fill_between(x_fit, y_u[h], y_l[h], where=y_u[h] >= y_l[h], color=tag_cols[h],
+                                             alpha=tag_alphas[h], label=tag_labels[h])
+                        plt.xlim(min(x_cut) - 0.2, max(x_cut) + 0.2)
+                        plt.ylim(min(lower) - 0.01, max(upper) + 0.01)
+                        plt.xlabel('Longitude (Degrees)', fontsize=20)
+                        plt.ylabel('Latitude (Degrees)', fontsize=20)
+                        plt.legend(loc='best', fontsize=20)
+                        plt.minorticks_on()
+                        plt.tick_params(axis='both', which='both', width=2)
+                        plt.tick_params(axis='both', which='major', length=7)
+                        plt.tick_params(axis='both', which='minor', length=4)
+                        # plt.show()
+                        plt.savefig('FigOut/AreaComparison.pdf', format='pdf', dpi=500)
+                        print '> Comparison plot saved to \"FigOut/AreaComparison.pdf\".'
 
             except ValueError:
                 pass
